@@ -1,4 +1,4 @@
-﻿var GreedySpeech = window.GreedySpeech || {};
+﻿var GreedySpeech =   {};
 
 /*
     伪随机字符串，用于生成id
@@ -23,13 +23,13 @@ GreedySpeech.setup = function(options){
     }
 
     function embedSWF(id){
-		var swfVersionStr = "10.0.0";
+		var swfVersionStr = "11.1.0";
 		var xiSwfUrlStr = "playerProductInstall.swf";
 		var flashvars = {};
 		var params = {};
 		params.quality = "high";
 		//params.bgcolor = "#ffffff";
-		params.allowscriptaccess = "sameDomain";
+		params.allowscriptaccess = "samedomain";
 		params.allowfullscreen = "false";
 		params.wmode = "transparent";
 		var attributes = {};
@@ -62,7 +62,6 @@ GreedySpeech.setup = function(options){
     //初始化接口定义
 	function initAPI(){
 		var recorder = document.getElementById(GreedySpeech.options.sId);
-
 		function delegate(name) {
 //			var outArgs=arguments;
             GreedySpeech[name] = function () {
@@ -76,9 +75,11 @@ GreedySpeech.setup = function(options){
         delegate('stop');
         delegate('set');
         //delegate('upload');
+
 		GreedySpeech.upload = function (onSuccess) {         
 			recorder.upload(GreedySpeech.options.uploadUrl,onSuccess)
 		}
+
 		GreedySpeech.show = function () {         
             recorder.style.visibility = "visible";
         }
