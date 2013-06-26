@@ -40,15 +40,14 @@ package greedy.recorder
 				}
 				return;
 			}
-			if (this._recording)
+			if (!this._recording)
 			{
-				External.call(onSuccess);
-				return;
+				this._mic.addEventListener(SampleDataEvent.SAMPLE_DATA, this.onSampleData);
+				this._buffer.clear();
+				this._buffer.position=0;
+				this._recording=true;
+				External.debug("start a new record");
 			}
-			this._mic.addEventListener(SampleDataEvent.SAMPLE_DATA, this.onSampleData);
-			this._buffer.clear();
-			this._buffer.position=0;
-			this._recording=true;
 			External.call(onSuccess);
 		}
 
@@ -59,6 +58,7 @@ package greedy.recorder
 			if (this._recording)
 			{
 				this._mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, this.onSampleData);
+				this._recording=false;
 				dispatchEvent(this._completeEvent);
 			}
 		}

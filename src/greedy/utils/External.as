@@ -16,7 +16,6 @@ package greedy.utils
 			{
 				try
 				{
-					debug("External.call: " + functionName + "(" + arguments + ")");
 					ExternalInterface.call(functionName, arguments);
 				}
 				catch (e:Error)

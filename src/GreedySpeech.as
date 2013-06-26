@@ -1,7 +1,7 @@
 package
 {
 	import cmodule.shine.*;
-	
+
 	import flash.display.*;
 	import flash.events.*;
 	import flash.media.*;
@@ -10,7 +10,7 @@ package
 	import flash.system.*;
 	import flash.text.*;
 	import flash.utils.*;
-	
+
 	import greedy.media.*;
 	import greedy.mp3.*;
 	import greedy.recorder.*;
@@ -41,7 +41,7 @@ package
 		}
 
 		private function internalStopRecord(onSuccess:String, onError:String=null):void
-		{			
+		{
 			this._micRecord.stop();
 			this._stopRecordSuccessCallback=onSuccess;
 			this._stopRecordErrorCallback=onError;
@@ -70,7 +70,7 @@ package
 			}
 		}
 
-		private function internalUpload(url:String, onSuccess:String, onError:String=""):void
+		private function internalUpload(url:String, mime:String="audio/x-wav", onSuccess:String="", onError:String=""):void
 		{
 			this._uploadSuccessCallback=onSuccess;
 			this._uploadErrorCallback=onError;
@@ -83,10 +83,9 @@ package
 //			loader.addEventListener(flash.events.HTTPStatusEvent.HTTP_STATUS, this.httpStatusHandler);
 			loader.addEventListener(flash.events.IOErrorEvent.IO_ERROR, this.uploadErrorHandler);
 
-			request.method=flash.net.URLRequestMethod.POST;
-			request.contentType="audio/x-mpeg";
-			var mp3ByteArray:ByteArray=this._mp3Encoder.data;
-			request.data=mp3ByteArray;
+			request.method=URLRequestMethod.POST;
+			request.contentType=mime;
+			request.data=mime == "audio/x-mpeg" ? this._mp3Encoder.data : this._micRecord.wavData;
 			try
 			{
 				loader.load(request);
@@ -99,7 +98,11 @@ package
 
 		private function uploadCompleteHandler(event:Event):void
 		{
-			External.call(this._uploadSuccessCallback);
+			External.debug(event.target.data);
+			if (this._uploadSuccessCallback != "")
+			{
+				External.call(this._uploadSuccessCallback, event.target.data);
+			}
 		}
 
 		private function uploadErrorHandler(event:ErrorEvent):void
@@ -111,17 +114,18 @@ package
 		}
 
 		private function onRecordComplete(event:Event):void
-		{ 		 
+		{
+			External.debug(this._micRecord.wavData.bytesAvailable.toString());
 			this._mp3Encoder=new MP3Encoder(this._micRecord.wavData);
 			this._mp3Encoder.addEventListener(Event.COMPLETE, encodeComplete);
 //			this._mp3Encoder.addEventListener("start", makeStart);
 			this._mp3Encoder.start();
 			return;
 		}
-		
+
 		private function encodeComplete(event:Event):void
 		{
-			External.call(this._stopRecordSuccessCallback);	
+			External.call(this._stopRecordSuccessCallback);
 		}
 
 //		private function clickHandler(ev:MouseEvent):void

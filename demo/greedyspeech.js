@@ -48,6 +48,7 @@ GreedySpeech.setup = function(options){
 			id:opts.id,
 			width:320,
 			height:240,
+			format:opts.format || "x-wav",
 			uploadUrl:opts.uploadUrl
 		};
 		var swfdiv = document.createElement('div');
@@ -77,7 +78,7 @@ GreedySpeech.setup = function(options){
         //delegate('upload');
 
 		GreedySpeech.upload = function (onSuccess) {         
-			recorder.upload(GreedySpeech.options.uploadUrl,onSuccess)
+			recorder.upload(GreedySpeech.options.uploadUrl,GreedySpeech.options.format,onSuccess)
 		}
 
 		GreedySpeech.show = function () {         
