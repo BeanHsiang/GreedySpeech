@@ -11,6 +11,8 @@
 	  GreedySpeech.hide();
 	  $("#btnstartRecord").attr("disabled", true);
 	  $("#btnstopRecord").attr("disabled", false);
+	  $("#btnPlay").attr("disabled", true);
+	  $("#btnUpload").attr("disabled", true);
   }
 
   function startRecordErrorCallback(err){
@@ -27,16 +29,22 @@
 	  $("#btnUpload").attr("disabled", false);
   }      
 
-  function uploadCallback()
+  function uploadCallback(msg)
   {
 	  $("#info").text("upload success");
+	  if(msg && msg.toString().length>0){
+	    $("#info").text(msg.toString());
+      }
   }
 
   $(function(){
       GreedySpeech.setup({
           id:"SpeechContainer",
 		  uploadUrl:"http://localhost:13810/home/audio",
-		  format:"x-mpeg"
+		  format:"audio/x-wav",
+		  rate:44,
+		  channels:1,
+		  bit:16
 	  });
 
 	  $("#btnstartRecord").click(function(){          
@@ -57,7 +65,7 @@
 	  });
       */
 	  $("#btnUpload").click(function(){
-          GreedySpeech.upload("uploadCallback");
+          GreedySpeech.upload($("#txtContent").val(),"uploadCallback");
 	  });
 
       $("#btnstopRecord").attr("disabled", true);
@@ -67,13 +75,13 @@
   </script>
  </head>
  <body>
-  <input type="button" id="btnstartRecord" value="开始录音" />
-  <input type="button" id="btnstopRecord" value="停止录音" />	
-  <input type="button" id="btnPlay" value="回放录音" />
-  <input type="button" id="btnUpload" value="上传录音" />
+  <input type="text"   id="txtContent">
+  <input type="button" id="btnstartRecord"  value="开始录音" />
+  <input type="button" id="btnstopRecord"   value="停止录音" />	
+  <input type="button" id="btnPlay"         value="回放录音" />
+  <input type="button" id="btnUpload"       value="上传录音" />
   <!--<input type="button" id="btnSet" value="设置" />-->
   <div id="info"></div>
-  <div id="SpeechContainer">
-  </div>  
+  <div id="SpeechContainer"></div>  
  </body>
 </html>

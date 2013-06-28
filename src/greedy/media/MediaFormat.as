@@ -4,7 +4,7 @@ package greedy.media
 
 	public class MediaFormat
 	{
-		public function MediaFormat(sampleRate:uint, bits:uint, channels:uint, endian:String)
+		public function MediaFormat(sampleRate:uint=44100, channels:uint=2, bits:uint=16, endian:String=Endian.LITTLE_ENDIAN)
 		{
 			this._sampleRate=sampleRate;
 			this._bits=bits;

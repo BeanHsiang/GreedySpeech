@@ -6,7 +6,6 @@ package
 	import flash.events.*;
 	import flash.media.*;
 	import flash.net.*;
-	import flash.sensors.Accelerometer;
 	import flash.system.*;
 	import flash.text.*;
 	import flash.utils.*;
@@ -29,7 +28,8 @@ package
 		private function init():void
 		{
 			this._option=new SpeechOption(root.loaderInfo.parameters);
-			this._micRecord=new MicRecorder();
+			External.debug(this._option.toString());
+			this._micRecord=new MicRecorder(new MediaFormat(MediaFormat.toRawRate(this._option.rate), this._option.channels, this._option.bit));
 			this._micRecord.addEventListener(Event.COMPLETE, this.onRecordComplete);
 			//注册外部调用函数
 			External.addCallback(STARTRECORD_FUNCTION, this._micRecord.record);
@@ -40,11 +40,11 @@ package
 			External.addCallback(UPLOAD_FUNCTION, internalUpload);
 		}
 
-		private function internalStopRecord(onSuccess:String, onError:String=null):void
+		private function internalStopRecord(onSuccess:String, onError:String=""):void
 		{
-			this._micRecord.stop();
 			this._stopRecordSuccessCallback=onSuccess;
 			this._stopRecordErrorCallback=onError;
+			this._micRecord.stop();
 		}
 
 		private function internalSet():void
@@ -54,12 +54,32 @@ package
 
 		private function internalPlay():void
 		{
-			var mp3ByteArray:ByteArray=this._mp3Encoder.data; //这里替换成自己的ByteArray
-			_loader=new MP3FileReferenceLoader();
-			//External.debug(mp3ByteArray.bytesAvailable.toString());
-			_loader.getMySound(mp3ByteArray);
-			_loader.addEventListener(MP3SoundEvent.COMPLETE, mp3LoaderCompleteHandler);
+//			var mp3ByteArray:ByteArray;
+			this._micRecord.pcmData.position=0;
+			if (this._micRecord.pcmData.bytesAvailable)
+			{
+				this._snd=new Sound();
+				this._snd.addEventListener(SampleDataEvent.SAMPLE_DATA, this.playbackSampleHandler);
+				this._sndChannel=this._snd.play();
+//				mp3ByteArray=this._mp3Encoder.data; //这里替换成自己的ByteArray			
+//				_loader=new MP3FileReferenceLoader();
+//				_loader.getMySound(mp3ByteArray);
+//				_loader.addEventListener(MP3SoundEvent.COMPLETE, mp3LoaderCompleteHandler);
+			}
+			else
+			{
+				External.debug("can't play wav");
+			}
+		}
 
+		private function playbackSampleHandler(event:SampleDataEvent):void
+		{
+			for (var i:int=0; i < 8192 && this._micRecord.pcmData.bytesAvailable > 0; i++)
+			{
+				var sample:Number=this._micRecord.pcmData.readFloat();
+				event.data.writeFloat(sample);
+				event.data.writeFloat(sample);
+			}
 		}
 
 		private function internalStop():void
@@ -74,18 +94,34 @@ package
 		{
 			this._uploadSuccessCallback=onSuccess;
 			this._uploadErrorCallback=onError;
+			this._uploadUrl=url;
+
+			if (mime == "audio/x-mpeg" && this._option.rate >= 44)
+			{
+				this._mp3Encoder=new MP3Encoder(this._micRecord.wavData);
+				this._mp3Encoder.addEventListener(Event.COMPLETE, encodeComplete);
+				this._mp3Encoder.start();
+			}
+			else
+			{
+				doUpload("audio/x-wav", this._micRecord.wavData);
+			}
+		}
+
+		private function doUpload(mime:String, content:ByteArray):void
+		{
 			var loader:URLLoader=new flash.net.URLLoader();
-			var request:URLRequest=new URLRequest(url);
+			var request:URLRequest=new URLRequest(this._uploadUrl);
 			loader.addEventListener(flash.events.Event.COMPLETE, this.uploadCompleteHandler);
-//			loader.addEventListener(flash.events.Event.OPEN, this.openHandler);
-//			loader.addEventListener(flash.events.ProgressEvent.PROGRESS, this.progressHandler);
+			//			loader.addEventListener(flash.events.Event.OPEN, this.openHandler);
+			//			loader.addEventListener(flash.events.ProgressEvent.PROGRESS, this.progressHandler);
 			loader.addEventListener(flash.events.SecurityErrorEvent.SECURITY_ERROR, this.uploadErrorHandler);
-//			loader.addEventListener(flash.events.HTTPStatusEvent.HTTP_STATUS, this.httpStatusHandler);
+			//			loader.addEventListener(flash.events.HTTPStatusEvent.HTTP_STATUS, this.httpStatusHandler);
 			loader.addEventListener(flash.events.IOErrorEvent.IO_ERROR, this.uploadErrorHandler);
 
 			request.method=URLRequestMethod.POST;
 			request.contentType=mime;
-			request.data=mime == "audio/x-mpeg" ? this._mp3Encoder.data : this._micRecord.wavData;
+			request.data=content;
 			try
 			{
 				loader.load(request);
@@ -98,7 +134,6 @@ package
 
 		private function uploadCompleteHandler(event:Event):void
 		{
-			External.debug(event.target.data);
 			if (this._uploadSuccessCallback != "")
 			{
 				External.call(this._uploadSuccessCallback, event.target.data);
@@ -107,7 +142,7 @@ package
 
 		private function uploadErrorHandler(event:ErrorEvent):void
 		{
-			if (this._uploadErrorCallback.length > 0)
+			if (this._uploadErrorCallback != "")
 			{
 				External.call(this._uploadErrorCallback, event.text);
 			}
@@ -115,28 +150,13 @@ package
 
 		private function onRecordComplete(event:Event):void
 		{
-			External.debug(this._micRecord.wavData.bytesAvailable.toString());
-			this._mp3Encoder=new MP3Encoder(this._micRecord.wavData);
-			this._mp3Encoder.addEventListener(Event.COMPLETE, encodeComplete);
-//			this._mp3Encoder.addEventListener("start", makeStart);
-			this._mp3Encoder.start();
-			return;
+			External.call(this._stopRecordSuccessCallback);
 		}
 
 		private function encodeComplete(event:Event):void
 		{
-			External.call(this._stopRecordSuccessCallback);
+			doUpload("audio/x-mpeg", this._mp3Encoder.data);
 		}
-
-//		private function clickHandler(ev:MouseEvent):void
-//		{
-//			_fileReference.browse([new FileFilter("mp3 files", "*.mp3")]);
-//		}
-//
-//		private function fileReferenceSelectHandler(ev:Event):void
-//		{
-//			_loader.getSound(_fileReference);
-//		}
 
 		private function mp3LoaderCompleteHandler(ev:MP3SoundEvent):void
 		{
@@ -159,12 +179,14 @@ package
 		private var _option:SpeechOption;
 		private var _micRecord:MicRecorder;
 		private var _mp3Encoder:MP3Encoder;
+		private var _snd:Sound;
 		private var _sndChannel:SoundChannel=null;
-		private var _loader:MP3FileReferenceLoader;
+//		private var _loader:MP3FileReferenceLoader;
 		//private var _fileReference:FileReference;
 		private var _stopRecordSuccessCallback:String;
 		private var _stopRecordErrorCallback:String;
 		private var _uploadSuccessCallback:String;
 		private var _uploadErrorCallback:String;
+		private var _uploadUrl:String;
 	}
 }

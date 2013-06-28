@@ -1,21 +1,31 @@
 package greedy.recorder
 {
 	import flash.events.*;
-	import flash.media.Microphone;
-	import flash.utils.*;
+	import flash.media.*;
 	import flash.system.*;
+	import flash.utils.*;
 
 	import greedy.media.*;
 	import greedy.utils.External;
 
 	public class MicRecorder extends EventDispatcher
 	{
-		public function MicRecorder()
+		public function MicRecorder(format:MediaFormat=null)
 		{
 			super();
+			this._encode=new WavEncode();
+			this._data=new ByteArray();
 			this._buffer=new ByteArray();
 			this._buffer.endian=Endian.LITTLE_ENDIAN;
 			this._completeEvent=new Event(Event.COMPLETE);
+			if (format == null)
+			{
+				this._mediaFormat=new MediaFormat();
+			}
+			else
+			{
+				this._mediaFormat=format;
+			}
 			initMic();
 		}
 
@@ -24,7 +34,12 @@ package greedy.recorder
 			this._mic=Microphone.getMicrophone();
 			this._mic.setSilenceLevel(0, 1000);
 			//this._mic.gain=this._gain;
-			this._mic.rate=44;
+			if (this._mediaFormat.sampleRate == 16000)
+			{
+				this._mic.codec=SoundCodec.SPEEX;
+			}
+			this._mic.rate=MediaFormat.toRoundedRate(this._mediaFormat.sampleRate);
+
 //			this._mic.addEventListener(StatusEvent.STATUS, this.onStatus);
 //			this._mic.addEventListener(ActivityEvent.ACTIVITY, this.onActivity);			
 		}
@@ -43,10 +58,9 @@ package greedy.recorder
 			if (!this._recording)
 			{
 				this._mic.addEventListener(SampleDataEvent.SAMPLE_DATA, this.onSampleData);
-				this._buffer.clear();
-				this._buffer.position=0;
+				this._data.clear();
+				this._data.position=0;
 				this._recording=true;
-				External.debug("start a new record");
 			}
 			External.call(onSuccess);
 		}
@@ -59,6 +73,7 @@ package greedy.recorder
 			{
 				this._mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, this.onSampleData);
 				this._recording=false;
+				this._buffer=this._encode.toByteArray(this._data, this._mediaFormat);
 				dispatchEvent(this._completeEvent);
 			}
 		}
@@ -84,10 +99,17 @@ package greedy.recorder
 
 		public function get wavData():ByteArray
 		{
-			var format:MediaFormat=new MediaFormat(MediaFormat.toRawRate(44), 16, 2, Endian.LITTLE_ENDIAN);
-			var encode:WavEncode=new WavEncode();
-			this._output=encode.toByteArray(format, this._buffer);
-			return this._output;
+			return this._buffer;
+		}
+
+		public function get pcmData():ByteArray
+		{
+			return this._data;
+		}
+		
+		public function get Format():MediaFormat
+		{
+			return this._mediaFormat;
 		}
 
 //		private function onStatus(event:StatusEvent):void
@@ -122,17 +144,17 @@ package greedy.recorder
 			while (event.data.bytesAvailable)
 			{
 				var sample:Number=event.data.readFloat();
-//				this._buffer.writeFloat(sample);
-				this._buffer.writeShort(sample * 32767);
-				this._buffer.writeShort(sample * 32767); //默认16bit双声道
+				this._data.writeFloat(sample);
 			}
 		}
 
 		private var _mic:Microphone;
 		private var _enabled:Boolean=false;
-		private var _buffer:ByteArray; //用于存放音频采样数据
-		private var _output:ByteArray; //转换成wav的数据
+		private var _buffer:ByteArray; //用于存放音频采样数据 
+		private var _data:ByteArray; //PCM数据
 		private var _completeEvent:Event; //录音完成事件对象
-		private var _recording:Boolean; //录音中的状态
+		private var _recording:Boolean; //录音中的状态\
+		private var _mediaFormat:MediaFormat; //录音中的状态
+		private var _encode:WavEncode; //wav编码器
 	}
 }

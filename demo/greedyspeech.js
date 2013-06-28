@@ -25,7 +25,7 @@ GreedySpeech.setup = function(options){
     function embedSWF(id){
 		var swfVersionStr = "11.1.0";
 		var xiSwfUrlStr = "playerProductInstall.swf";
-		var flashvars = {};
+		var flashvars = {rate:GreedySpeech.options.rate,channels:GreedySpeech.options.channels,bit:GreedySpeech.options.bit};
 		var params = {};
 		params.quality = "high";
 		//params.bgcolor = "#ffffff";
@@ -49,7 +49,10 @@ GreedySpeech.setup = function(options){
 			width:320,
 			height:240,
 			format:opts.format || "x-wav",
-			uploadUrl:opts.uploadUrl
+			uploadUrl:opts.uploadUrl,
+     		rate:opts.rate || 44,
+	        channels:opts.channels || 2,
+            bit:opts.bit || 16
 		};
 		var swfdiv = document.createElement('div');
         var tmpId = GreedySpeech.createId();
@@ -77,8 +80,9 @@ GreedySpeech.setup = function(options){
         delegate('set');
         //delegate('upload');
 
-		GreedySpeech.upload = function (onSuccess) {         
-			recorder.upload(GreedySpeech.options.uploadUrl,GreedySpeech.options.format,onSuccess)
+		GreedySpeech.upload = function (content, onSuccess) {
+			var q=content?GreedySpeech.options.uploadUrl+"?q="+encodeURIComponent(content):GreedySpeech.options.uploadUrl;
+			recorder.upload(q,GreedySpeech.options.format,onSuccess)
 		}
 
 		GreedySpeech.show = function () {         
