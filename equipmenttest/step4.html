@@ -1,0 +1,36 @@
+<!-- 学生答题step4 {-->
+<div style="display:block;">
+    <div class="questionbox4">
+        <div class="Stepgraphbox Stepgraph4"></div>
+        <!--step4的示意图-->
+        <div class="Steptipsbox3Outer">
+            <!-- vynil {-->
+            <div class="clearfix Steptipsbox3s">
+                <div class="fl IconS3"></div>
+                <!--进度 {-->
+                <greedy-Progress></greedy-Progress>
+                <!--} 进度 -->
+            </div>
+            <!--} vynil -->
+            <!-- microphone {-->
+            <div class="clearfix Steptipsbox3s">
+                <div class="fl IconS5"></div>
+                <!--进度 {-->
+                <greedy-Slide></greedy-Slide>
+            </div>
+            <!--} microphone -->
+        </div>
+        <div class="Steptipsbox8" ng-show="flag==4">你听到测试音了吗？</div>
+    </div>
+    <div class="StepBtnboxs clearfix" ng-show="flag==4">
+        <div class="fl">
+            <button class="btn5Style" ng-click="cancel()">没有</button>
+            <!-- 置灰样式为 <button class="btn5StyleDis">没有</button> --></div>
+        <div class="fr">
+            <button class="btn5Style" ng-click="next()">听到了</button>
+            <!-- 置灰样式为 <button class="btn5StyleDis">听到了</button> --></div>
+    </div>
+    <button ng-class="{'btn5Style':flag ==0,'btn5StyleDis':flag!=0}" ng-click="record()" ng-show="flag<4">录音测试</button>
+    <!-- 置灰样式为 <button class="btn5StyleDis">录音测试</button> -->
+</div>
+<!--} 学生答题step4 -->

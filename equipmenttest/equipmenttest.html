@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html ng-app='equipmenttest' class="ng-app:equipmenttest" id="equipmenttest">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Equipment Test</title>
+    <link href="css/equipmenttest.css" rel="stylesheet" type="text/css"/>
+    <script src="jquery-1.9.1.min.js"></script>
+    <script src="greedyspeech/swfobject.js"></script>
+    <script src="greedyspeech/greedyspeech.js"></script>
+    <script src="lhgdialog/dialog.base.js"></script>
+    <script src="angular.min.js"></script>
+    <script src="equipmenttest.js"></script>
+</head>
+<body class="webbodybg">
+<div id="SpeechContainer"
+     style="position: absolute;left:40%;top:17%; z-index: -50;filter:alpha(opacity=90);-moz-opacity:0.9;-khtml-opacity: 0.9;opacity: 0.9;"></div>
+<!-- top toolbar  {-->
+<div class="webTopToolbarOuter font18">
+    Equipment Test
+</div>
+<!--} top toolbar -->
+
+<!-- Midbox  {-->
+<div ng-view class="webMidbox">
+</div>
+<!--} Midbox  -->
+
+<!-- footer  -->
+<div class="webfooter">Copyright 2010 – 2013 Greedy Intelligence Ltd. All rights reserved.</div>
+<script type="text/javascript">
+    function setFootbarPosition() {
+        //窗口高度超过页面高度时，中间部分的高度自动增高
+        if ($(window).height() > $("body").height()) {
+            $(".webMidbox").css("min-height", $(window).height() - 140);
+        }
+    }
+    $(window).resize(setFootbarPosition);
+    $(window).load(setFootbarPosition);
+</script>
+
+</body>
+</html>
