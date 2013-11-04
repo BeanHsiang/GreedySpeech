@@ -4,7 +4,7 @@ package greedy.recorder
 	import flash.media.*;
 	import flash.system.*;
 	import flash.utils.*;
-
+	
 	import greedy.media.*;
 	import greedy.utils.External;
 
@@ -17,6 +17,7 @@ package greedy.recorder
 			this._data=new ByteArray();
 			this._buffer=new ByteArray();
 			this._buffer.endian=Endian.LITTLE_ENDIAN;
+			this._gain=50;			
 			this._completeEvent=new Event(Event.COMPLETE);
 			if (format == null)
 			{
@@ -31,7 +32,11 @@ package greedy.recorder
 
 		private function initMic():void
 		{
-			this._mic=Microphone.getMicrophone();
+			this._mic=Microphone.getMicrophone();			
+			if(Microphone.names.length==0)
+			{
+				External.debug("nonono");				
+			}
 			this._mic.setSilenceLevel(0, 1000);
 			//this._mic.gain=this._gain;
 			if (this._mediaFormat.sampleRate == 16000)
@@ -44,12 +49,12 @@ package greedy.recorder
 //			this._mic.addEventListener(ActivityEvent.ACTIVITY, this.onActivity);			
 		}
 
-		public function record(onSuccess:String, onError:String=null):void
+		public function record(onSuccess:String, onError:String=""):void
 		{
 			if (!this.Enabled)
 			{
 				Security.showSettings(SecurityPanel.PRIVACY);
-				if (onError != null)
+				if (onError != "")
 				{
 					External.call(onError, "access denied");
 				}
@@ -58,6 +63,7 @@ package greedy.recorder
 			if (!this._recording)
 			{
 				this._mic.addEventListener(SampleDataEvent.SAMPLE_DATA, this.onSampleData);
+				this._mic.gain=this._gain;
 				this._data.clear();
 				this._data.position=0;
 				this._recording=true;
@@ -112,6 +118,10 @@ package greedy.recorder
 			return this._mediaFormat;
 		}
 
+		public function set Gain(value:Number):void
+		{
+			this._gain=value;
+		}
 //		private function onStatus(event:StatusEvent):void
 //		{
 //			//			if (event.code == "Microphone.Unmuted") 
@@ -153,8 +163,9 @@ package greedy.recorder
 		private var _buffer:ByteArray; //用于存放音频采样数据 
 		private var _data:ByteArray; //PCM数据
 		private var _completeEvent:Event; //录音完成事件对象
-		private var _recording:Boolean; //录音中的状态\
+		private var _recording:Boolean; //录音中的状态
 		private var _mediaFormat:MediaFormat; //录音中的状态
 		private var _encode:WavEncode; //wav编码器
+		private var _gain:Number; //wav编码器
 	}
 }

@@ -1,7 +1,6 @@
 package
 {
-
-	public final class SpeechOption
+   	public final class SpeechOption
 	{
 		public function SpeechOption(params:Object)
 		{

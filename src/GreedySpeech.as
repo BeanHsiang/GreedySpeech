@@ -1,7 +1,7 @@
 package
 {
 	import cmodule.shine.*;
-
+	
 	import flash.display.*;
 	import flash.events.*;
 	import flash.media.*;
@@ -9,7 +9,9 @@ package
 	import flash.system.*;
 	import flash.text.*;
 	import flash.utils.*;
-
+	
+	import flashx.textLayout.formats.Float;
+	
 	import greedy.media.*;
 	import greedy.mp3.*;
 	import greedy.recorder.*;
@@ -35,11 +37,51 @@ package
 			External.addCallback(STARTRECORD_FUNCTION, this._micRecord.record);
 			External.addCallback(STOPRECORD_FUNCTION, internalStopRecord);
 			External.addCallback(SET_FUNCTION, internalSet);
-			External.addCallback(PLAY_FUNCTION, internalPlay);
-			External.addCallback(STOP_FUNCTION, internalStop);
+			External.addCallback(PLAYRECORD_FUNCTION, internalPlayRecord);
+			External.addCallback(STOPPLAYRECORD_FUNCTION, internalStopPlayRecord);
+			External.addCallback(PLAYAUDIO_FUNCTION, internalPlayAudio);
 			External.addCallback(UPLOAD_FUNCTION, internalUpload);
+			External.addCallback(SETVOLUME_FUNCTION, internalSetVolume);
+			External.addCallback(SETGAIN_FUNCTION, internalSetGain);			
+		}
+		
+		private function internalSetGain(gain:Number):void
+		{
+			this._micRecord.Gain=gain;	
+		}
+		
+		private function internalSetVolume(volume:Number):void
+		{
+			if(this._sndChannel!=null)
+			{
+				var transform:SoundTransform = _sndChannel.soundTransform;
+				transform.volume = volume;
+				_sndChannel.soundTransform = transform;
+			}
 		}
 
+		private function internalPlayAudio(url:String,onSuccess:String="", onError:String=""):void
+		{
+			try
+			{
+				var req:URLRequest = new URLRequest(url);
+				this._snd=new Sound();
+				this._snd.load(req);		
+				this._sndChannel = this._snd.play();
+				this._sndChannel.addEventListener(Event.SOUND_COMPLETE, soundCompleteHandler);
+			}
+			catch(e:Error)
+			{
+				//External.debug(e.message);
+			}			
+		}
+		
+		private function soundCompleteHandler(e:Event):void
+		{
+			this._snd.removeEventListener(SampleDataEvent.SAMPLE_DATA, this.playbackSampleHandler);
+			this._sndChannel.removeEventListener(Event.SOUND_COMPLETE, soundCompleteHandler);
+		}
+		
 		private function internalStopRecord(onSuccess:String, onError:String=""):void
 		{
 			this._stopRecordSuccessCallback=onSuccess;
@@ -52,7 +94,8 @@ package
 			Security.showSettings(SecurityPanel.PRIVACY);
 		}
 
-		private function internalPlay():void
+		private function internalPlayRecord():void
+//		private function internalPlay():void
 		{
 //			var mp3ByteArray:ByteArray;
 			this._micRecord.pcmData.position=0;
@@ -60,7 +103,8 @@ package
 			{
 				this._snd=new Sound();
 				this._snd.addEventListener(SampleDataEvent.SAMPLE_DATA, this.playbackSampleHandler);
-				this._sndChannel=this._snd.play();
+				this._sndChannel=this._snd.play();				
+				this._sndChannel.addEventListener(Event.SOUND_COMPLETE, soundCompleteHandler);
 //				mp3ByteArray=this._mp3Encoder.data; //这里替换成自己的ByteArray			
 //				_loader=new MP3FileReferenceLoader();
 //				_loader.getMySound(mp3ByteArray);
@@ -82,7 +126,7 @@ package
 			}
 		}
 
-		private function internalStop():void
+		private function internalStopPlayRecord():void
 		{
 			if (this._sndChannel != null)
 			{
@@ -169,11 +213,16 @@ package
 //		private const PAUSE_FUNCTION:String="pause";
 		//		private const RESUME_EVENT="resume";
 
-		private const PLAY_FUNCTION:String="play";
-		private const STOP_FUNCTION:String="stop";
+//		private const PLAY_FUNCTION:String="play";
+		private const PLAYRECORD_FUNCTION:String="playRecord";
+		private const STOPPLAYRECORD_FUNCTION:String="stopPlayRecord";
+		private const PLAYAUDIO_FUNCTION:String="playAudio";
+		private const STOPPLAYAUDIO_FUNCTION:String="stopPlayAudio";
 		private const UPLOAD_FUNCTION:String="upload";
 //		private const SAVE_FUNCTION:String="save";
 		private const SET_FUNCTION:String="set";
+		private const SETVOLUME_FUNCTION:String="setVolume";
+		private const SETGAIN_FUNCTION:String="setGain";
 
 		//应用设置
 		private var _option:SpeechOption;

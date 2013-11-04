@@ -73,16 +73,42 @@ GreedySpeech.setup = function(options){
             }
         }
         //delegate('stopPlaying');
-        delegate('startRecord');
-        delegate('stopRecord');
-        delegate('play');
-        delegate('stop');
+        //delegate('startRecord');
+        //delegate('stopRecord');
+        //delegate('play');
+        //delegate('stopPlayRecord');
         delegate('set');
+        delegate('setVolume');
         //delegate('upload');
 
+        GreedySpeech.stopPlayRecord = function () {
+            console.log("stop play record");
+            recorder.stopPlayRecord();
+        }
+
+        GreedySpeech.playAudio = function (url) {
+            recorder.playAudio(url);
+        }
+
+        GreedySpeech.playRecord = function () {
+            recorder.playRecord();
+        }
+
+        GreedySpeech.startRecord = function (onSuccess,onError) {        
+            GreedySpeech.startRecordCallback = onSuccess;
+            GreedySpeech.startRecordErrorCallback = onError;			
+			recorder.startRecord("GreedySpeech.startRecordCallback","GreedySpeech.startRecordErrorCallback");
+		}
+		
+		GreedySpeech.stopRecord = function (onSuccess) {        
+            GreedySpeech.stopRecordCallback = onSuccess;			
+			recorder.stopRecord("GreedySpeech.stopRecordCallback");
+		}
+				
 		GreedySpeech.upload = function (content, onSuccess) {
 			var q=content?GreedySpeech.options.uploadUrl+"?q="+encodeURIComponent(content):GreedySpeech.options.uploadUrl;
-			recorder.upload(q,GreedySpeech.options.format,onSuccess)
+			GreedySpeech.uploadCallback = onSuccess;
+			recorder.upload(q,GreedySpeech.options.format,"GreedySpeech.uploadCallback");
 		}
 
 		GreedySpeech.show = function () {         
