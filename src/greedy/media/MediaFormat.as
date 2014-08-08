@@ -4,7 +4,7 @@ package greedy.media
 
 	public class MediaFormat
 	{
-		public function MediaFormat(sampleRate:uint=44100, channels:uint=2, bits:uint=16, endian:String=Endian.LITTLE_ENDIAN)
+		public function MediaFormat(sampleRate:Number=44100, channels:int=1, bits:int=16, endian:String=Endian.LITTLE_ENDIAN)
 		{
 			this._sampleRate=sampleRate;
 			this._bits=bits;
@@ -72,17 +72,17 @@ package greedy.media
 			throw new Error("不支持的采样率(kHz): " + rate);
 		}
 
-		public function get sampleRate():uint
+		public function get sampleRate():Number
 		{
 			return this._sampleRate;
 		}
 
-		public function get bits():uint
+		public function get bits():int
 		{
 			return this._bits;
 		}
 
-		public function get channels():uint
+		public function get channels():int
 		{
 			return this._channels;
 		}
@@ -92,19 +92,19 @@ package greedy.media
 			return this._endian;
 		}
 
-		public function get blockSize():uint
+		public function get blockSize():int
 		{
 			return this._channels * this._bits / 8;
 		}
 
-		public function get avgBytesPerSec():uint
+		public function get avgBytesPerSec():int
 		{
 			return this.blockSize * this._sampleRate;
 		}
 
-		private var _sampleRate:uint; //采样率kHz为单位  11025Hz（11kHz）、22050Hz（22kHz）和44100Hz（44kHz）
-		private var _bits:uint; //采样位值，与采样率相对应 8 16 32
-		private var _channels:uint; //声道数 1：单声道  2：双声道
+		private var _sampleRate:Number; //采样率kHz为单位  11025Hz（11kHz）、22050Hz（22kHz）和44100Hz（44kHz）
+		private var _bits:int; //采样位值，与采样率相对应 8 16 32
+		private var _channels:int; //声道数 1：单声道  2：双声道
 		private var _endian:String; //数据存储的字节序 flash.utils.Endian.BIG_ENDIAN flash.utils.Endian.LITTLE_ENDIAN
 
 		//需要使用的常量

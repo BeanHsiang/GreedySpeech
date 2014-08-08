@@ -12,8 +12,7 @@ package greedy.recorder
 	{
 		public function MicRecorder(format:MediaFormat=null)
 		{
-			super();
-			this._encode=new WavEncode();
+			super();			
 			this._data=new ByteArray();
 			this._buffer=new ByteArray();
 			this._buffer.endian=Endian.LITTLE_ENDIAN;
@@ -27,13 +26,18 @@ package greedy.recorder
 			{
 				this._mediaFormat=format;
 			}
+			this._encode=new WavEncode();
+			this._encode.numOfChannels = this._mediaFormat.channels;
+			this._encode.sampleBitRate = this._mediaFormat.bits;
+			this._encode.samplingRate = this._mediaFormat.sampleRate;
 			initMic();
 		}
 
 		private function initMic():void
 		{
-			this._mic=Microphone.getMicrophone();			
-			if(Microphone.names.length==0)
+			this._mic=Microphone.getMicrophone();
+//			External.debug(Microphone.names.length+"");
+			if(this._mic==null)
 			{
 				External.debug("nonono");				
 			}
@@ -42,9 +46,13 @@ package greedy.recorder
 			if (this._mediaFormat.sampleRate == 16000)
 			{
 				this._mic.codec=SoundCodec.SPEEX;
+				this._mic.encodeQuality=3;
+				External.debug("use SPEEX");
 			}
-			this._mic.rate=MediaFormat.toRoundedRate(this._mediaFormat.sampleRate);
-
+			else
+			{
+			    this._mic.rate=MediaFormat.toRoundedRate(this._mediaFormat.sampleRate);
+			}
 //			this._mic.addEventListener(StatusEvent.STATUS, this.onStatus);
 //			this._mic.addEventListener(ActivityEvent.ACTIVITY, this.onActivity);			
 		}
@@ -79,7 +87,8 @@ package greedy.recorder
 			{
 				this._mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, this.onSampleData);
 				this._recording=false;
-				this._buffer=this._encode.toByteArray(this._data, this._mediaFormat);
+				this._data.position=0;
+				this._encode.processSamples(this._buffer, this._data, this._mediaFormat.sampleRate,this._mediaFormat.channels);
 				dispatchEvent(this._completeEvent);
 			}
 		}

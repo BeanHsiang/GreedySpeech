@@ -1,5 +1,6 @@
 package
 {
+	import cmodule.flac.CLibInit;
 	import cmodule.shine.*;
 	
 	import flash.display.*;
@@ -15,8 +16,8 @@ package
 	import greedy.media.*;
 	import greedy.mp3.*;
 	import greedy.recorder.*;
-	import greedy.utils.External;
-
+	import greedy.utils.External;	
+	
 	public class GreedySpeech extends Sprite
 	{
 		public function GreedySpeech()
@@ -33,6 +34,7 @@ package
 			External.debug(this._option.toString());
 			this._micRecord=new MicRecorder(new MediaFormat(MediaFormat.toRawRate(this._option.rate), this._option.channels, this._option.bit));
 			this._micRecord.addEventListener(Event.COMPLETE, this.onRecordComplete);
+			
 			//注册外部调用函数
 			External.addCallback(STARTRECORD_FUNCTION, this._micRecord.record);
 			External.addCallback(STOPRECORD_FUNCTION, internalStopRecord);
@@ -140,11 +142,19 @@ package
 			this._uploadErrorCallback=onError;
 			this._uploadUrl=url;
 
-			if (mime == "audio/x-mpeg" && this._option.rate >= 44)
+			if (mime == "audio/x-mpeg" && this._option.rate >= 44) 
 			{
 				this._mp3Encoder=new MP3Encoder(this._micRecord.wavData);
 				this._mp3Encoder.addEventListener(Event.COMPLETE, encodeComplete);
 				this._mp3Encoder.start();
+			}
+			else if(mime == "audio/x-flac")
+			{			
+				this._flacCodec=(new cmodule.flac.CLibInit).init();	
+				this._flacEncodedData = new ByteArray();
+				this._flacEncodedData.endian = Endian.LITTLE_ENDIAN;				
+				var rawData:ByteArray= convert32to16(this._micRecord.pcmData);
+				this._flacCodec.encode(encodingCompleteHandler, encodingProgressHandler,  rawData, this._flacEncodedData, rawData.length, 30);
 			}
 			else
 			{
@@ -165,7 +175,9 @@ package
 
 			request.method=URLRequestMethod.POST;
 			request.contentType=mime;
+			content.position=0;
 			request.data=content;
+			External.debug("Upload:"+request.data.bytesAvailable.toString());
 			try
 			{
 				loader.load(request);
@@ -207,6 +219,34 @@ package
 			this._sndChannel=ev.sound.play();
 		}
 
+		private function encodingCompleteHandler(event:*):void 
+		{
+			External.debug("finished flac encoded");
+			doUpload("audio/x-flac", this._flacEncodedData);
+		}
+
+		private function encodingProgressHandler(progress:int):void 
+		{
+		
+		}
+		
+		private function convert32to16(source:ByteArray):ByteArray {
+			var result:ByteArray = new ByteArray();
+			result.endian = Endian.LITTLE_ENDIAN;
+			source.position=0;
+			while( source.bytesAvailable ) {
+				var sample:Number = source.readFloat() * SHORT_MAX_VALUE;
+				
+				// Make sure we don't overflow.
+				if (sample < -SHORT_MAX_VALUE) sample = -SHORT_MAX_VALUE;
+				else if (sample > SHORT_MAX_VALUE) sample = SHORT_MAX_VALUE;
+				
+				result.writeShort(sample);
+			}
+			result.position = 0;
+			return result;
+		}
+		
 		//提供给外部调用的函数名称
 		private const STARTRECORD_FUNCTION:String="startRecord";
 		private const STOPRECORD_FUNCTION:String="stopRecord";
@@ -223,13 +263,17 @@ package
 		private const SET_FUNCTION:String="set";
 		private const SETVOLUME_FUNCTION:String="setVolume";
 		private const SETGAIN_FUNCTION:String="setGain";
-
+		private static const FLOAT_MAX_VALUE:Number = 1.0;
+		private static const SHORT_MAX_VALUE:int = 0x7fff;
+		
 		//应用设置
 		private var _option:SpeechOption;
 		private var _micRecord:MicRecorder;
 		private var _mp3Encoder:MP3Encoder;
 		private var _snd:Sound;
 		private var _sndChannel:SoundChannel=null;
+		private var _flacCodec:Object;
+		private var _flacEncodedData:ByteArray;
 //		private var _loader:MP3FileReferenceLoader;
 		//private var _fileReference:FileReference;
 		private var _stopRecordSuccessCallback:String;
