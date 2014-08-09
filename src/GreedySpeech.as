@@ -18,6 +18,9 @@ package
 	import greedy.recorder.*;
 	import greedy.utils.External;	
 	
+	import org.as3wavsound.WavSound;
+	import org.as3wavsound.WavSoundChannel;
+	
 	public class GreedySpeech extends Sprite
 	{
 		public function GreedySpeech()
@@ -42,6 +45,7 @@ package
 			External.addCallback(PLAYRECORD_FUNCTION, internalPlayRecord);
 			External.addCallback(STOPPLAYRECORD_FUNCTION, internalStopPlayRecord);
 			External.addCallback(PLAYAUDIO_FUNCTION, internalPlayAudio);
+			External.addCallback(STOPPLAYAUDIO_FUNCTION, internalStopPlayAudio);
 			External.addCallback(UPLOAD_FUNCTION, internalUpload);
 			External.addCallback(SETVOLUME_FUNCTION, internalSetVolume);
 			External.addCallback(SETGAIN_FUNCTION, internalSetGain);			
@@ -80,7 +84,6 @@ package
 		
 		private function soundCompleteHandler(e:Event):void
 		{
-			this._snd.removeEventListener(SampleDataEvent.SAMPLE_DATA, this.playbackSampleHandler);
 			this._sndChannel.removeEventListener(Event.SOUND_COMPLETE, soundCompleteHandler);
 		}
 		
@@ -99,14 +102,13 @@ package
 		private function internalPlayRecord():void
 //		private function internalPlay():void
 		{
-//			var mp3ByteArray:ByteArray;
-			this._micRecord.pcmData.position=0;
-			if (this._micRecord.pcmData.bytesAvailable)
+//			var mp3ByteArray:ByteArray;			
+			this._micRecord.wavData.position=0;
+			if (this._micRecord.wavData.bytesAvailable)
 			{
-				this._snd=new Sound();
-				this._snd.addEventListener(SampleDataEvent.SAMPLE_DATA, this.playbackSampleHandler);
-				this._sndChannel=this._snd.play();				
-				this._sndChannel.addEventListener(Event.SOUND_COMPLETE, soundCompleteHandler);
+				this._wavSnd=new WavSound(this._micRecord.wavData);			 
+				this._wavSndChannel=this._wavSnd.play();			
+			 
 //				mp3ByteArray=this._mp3Encoder.data; //这里替换成自己的ByteArray			
 //				_loader=new MP3FileReferenceLoader();
 //				_loader.getMySound(mp3ByteArray);
@@ -116,26 +118,24 @@ package
 			{
 				External.debug("can't play wav");
 			}
-		}
+		}		 
 
-		private function playbackSampleHandler(event:SampleDataEvent):void
+		private function internalStopPlayRecord():void
 		{
-			for (var i:int=0; i < 8192 && this._micRecord.pcmData.bytesAvailable > 0; i++)
+			if (this._wavSndChannel != null)
 			{
-				var sample:Number=this._micRecord.pcmData.readFloat();
-				event.data.writeFloat(sample);
-				event.data.writeFloat(sample);
+				this._wavSndChannel.stop();
 			}
 		}
 
-		private function internalStopPlayRecord():void
+		private function internalStopPlayAudio():void
 		{
 			if (this._sndChannel != null)
 			{
 				this._sndChannel.stop();
 			}
 		}
-
+		
 		private function internalUpload(url:String, mime:String="audio/x-wav", onSuccess:String="", onError:String=""):void
 		{
 			this._uploadSuccessCallback=onSuccess;
@@ -272,6 +272,8 @@ package
 		private var _mp3Encoder:MP3Encoder;
 		private var _snd:Sound;
 		private var _sndChannel:SoundChannel=null;
+		private var _wavSnd:WavSound;
+		private var _wavSndChannel:WavSoundChannel=null;
 		private var _flacCodec:Object;
 		private var _flacEncodedData:ByteArray;
 //		private var _loader:MP3FileReferenceLoader;
