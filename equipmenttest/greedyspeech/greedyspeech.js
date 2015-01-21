@@ -128,7 +128,7 @@ GreedySpeech.setup = function (options) {
         GreedySpeech.hide = function () {
 //            recorder.style.visibility = "hidden";
             var container = document.getElementById(GreedySpeech.options.id);
-            container.style.zIndex = -50;
+            container.style.zIndex = 50;
         }
     }
 

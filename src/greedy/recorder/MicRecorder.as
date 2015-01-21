@@ -88,7 +88,9 @@ package greedy.recorder
 				this._mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, this.onSampleData);
 				this._recording=false;
 				this._data.position=0;
-				this._encode.processSamples(this._buffer, this._data, this._mediaFormat.sampleRate,this._mediaFormat.channels);
+				this._buffer.clear();
+				this._buffer.position=0;
+//				this._encode.processSamples(this._buffer, this._data, this._mediaFormat.sampleRate,this._mediaFormat.channels);
 				dispatchEvent(this._completeEvent);
 			}
 		}
