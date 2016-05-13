@@ -39,7 +39,7 @@ package greedy.recorder
 //			External.debug(Microphone.names.length+"");
 			if(this._mic==null)
 			{
-				External.debug("nonono");				
+				External.debug("can't get a mic device");				
 			}
 			this._mic.setSilenceLevel(0, 1000);
 			//this._mic.gain=this._gain;
@@ -85,14 +85,15 @@ package greedy.recorder
 //			this._mic.removeEventListener(ActivityEvent.ACTIVITY, this.onActivity);
 			if (this._recording)
 			{
-				this._mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, this.onSampleData);
-				this._recording=false;
+				this._mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, this.onSampleData);				
 				this._data.position=0;
 				this._buffer.clear();
 				this._buffer.position=0;
 //				this._encode.processSamples(this._buffer, this._data, this._mediaFormat.sampleRate,this._mediaFormat.channels);
-				dispatchEvent(this._completeEvent);
+				this._recording=false;
 			}
+			dispatchEvent(this._completeEvent);
+			
 		}
 
 //		public function pause():void
